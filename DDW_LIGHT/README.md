@@ -213,6 +213,20 @@ summary(fit3)
 
 
 
+![png](output_1_19.png)
+
+
+
+![png](output_1_20.png)
+
+
+
+![png](output_1_21.png)
+
+
+
+![png](output_1_25.png)
+
     Call: xtabs(formula = ~G$COMPLICATION + C$CFD)
     Number of cases in table: 44 
     Number of factors: 2 
@@ -237,18 +251,6 @@ summary(fit3)
     Test for independence of all factors:
     	Chisq = 14.269, df = 2, p-value = 0.000797
     	Chi-squared approximation may be incorrect
-
-
-
-![png](output_1_19.png)
-
-
-
-![png](output_1_20.png)
-
-
-
-![png](output_1_21.png)
 
 
 
@@ -305,10 +307,6 @@ summary(fit3)
     Wald test            = 6.41  on 2 df,   p=0.04065
     Score (logrank) test = 7.67  on 2 df,   p=0.02163
     
-
-
-
-![png](output_1_25.png)
 
 ```python
 # python -m pip install --upgrade pip
@@ -417,3 +415,60 @@ axes[0].plot(train_loss_results)
 axes[1].set_ylabel("Accuracy", fontsize=14)
 axes[1].set_xlabel("Epoch", fontsize=14)
 axes[1].plot(train_accuracy_results);
+
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+import itertools
+colors = itertools.cycle(["green", "limegreen", "tomato"])
+test_url = "https://storage.googleapis.com/ddw/SAMPLE.csv"
+test_fp = tf.keras.utils.get_file(fname=os.path.basename(test_url),origin=test_url)
+test_dataset = tf.contrib.data.make_csv_dataset(
+    test_fp,
+    batch_size, 
+    column_names=column_names,
+    label_name='complication',
+    num_epochs=1,
+    shuffle=False)
+test_dataset = test_dataset.map(pack_features_vector)
+test_accuracy = tfe.metrics.Accuracy()
+for (x, y) in test_dataset:
+  logits = model(x)
+  prediction = tf.argmax(logits, axis=1, output_type=tf.int32)
+  test_accuracy(prediction, y)
+print("Test set accuracy: {:.3%}".format(test_accuracy.result()))
+tf.stack([y,prediction],axis=1);
+
+CRPc1d3 = 128; CRPc1d5 = 100; WBCc1d3 = 8.78; WBCc1d5 = 7.39; # NC
+CRPc2d3 = 136; CRPc2d5 = 240; WBCc2d3 = 14.82; WBCc2d5 = 7.16; # AC
+CRPc3d3 = 80; CRPc3d5 = 190; WBCc3d3 = 4.25; WBCc3d5 = 14.56; # SC
+
+predict_dataset = tf.convert_to_tensor([
+        [CRPc1d3, CRPc1d5, WBCc1d3, WBCc1d5,],
+        [CRPc2d3, CRPc2d5, WBCc2d3, WBCc2d5,],
+        [CRPc3d3, CRPc3d5, WBCc3d3, WBCc3d5]
+    ])        
+predictions = model(predict_dataset)
+for i, logits in enumerate(predictions):
+    class_idx = tf.argmax(logits).numpy()
+    p = tf.nn.softmax(logits)[class_idx]
+    name = class_names[class_idx]
+    print("Example {} prediction: {} ({:4.1f}%)".format(i, name, 100*p))
+```
+
+    Local copy of the dataset file: C:\Users\Manuel Mena\.keras\datasets\sample2.csv
+    Features: ['CRPD3', 'CRPD5', 'WBCD3', 'WBCD5']
+    Label: complication
+    Loss test: 4.931779861450195
+    Step: 0, Initial Loss: 4.931779861450195
+    Step: 1,         Loss: 55.01960754394531
+    Epoch 000: Loss: 25.709, Accuracy: 61.364%
+    Epoch 050: Loss: 0.476, Accuracy: 75.000%
+    Epoch 100: Loss: 0.478, Accuracy: 72.727%
+    Epoch 150: Loss: 0.614, Accuracy: 77.273%
+    Epoch 200: Loss: 0.510, Accuracy: 75.000%
+    Epoch 250: Loss: 0.438, Accuracy: 75.000%
+    Test set accuracy: 72.727%
+    Example 0 prediction: Any Complication (54.3%)
+    Example 1 prediction: Severe Complication (85.7%)
+    Example 2 prediction: Severe Complication (100.0%)
