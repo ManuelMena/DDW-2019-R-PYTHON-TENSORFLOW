@@ -473,4 +473,4 @@ for i, logits in enumerate(predictions):
     Example 1 prediction: Severe Complication (85.7%)
     Example 2 prediction: Severe Complication (100.0%)
 
-    ![png](output_2_1.png)
+![png](output_2_1.png)
